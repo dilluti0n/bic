@@ -1,5 +1,5 @@
 CC ?= cc
-CFLAGS ?= -Wall -std=c11
+CFLAGS ?= -Wall -std=c23
 LDFLAGS ?=
 TARGET := bic
 SRCS := $(wildcard *.c)
