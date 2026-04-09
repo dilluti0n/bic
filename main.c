@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/random.h>
 #include <errno.h>
+#include <assert.h>
 
 const int ofd = 1;
 char *cmd = "bic";
@@ -38,6 +39,11 @@ cleanup:
 	return ret;
 }
 
+int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
+{
+	assert(0 && "unimplemented");
+}
+
 int run(secp256k1_context *ctx, int argc, char *argv[])
 {
 	if (argc < 1) {
@@ -45,10 +51,12 @@ int run(secp256k1_context *ctx, int argc, char *argv[])
 		return 1;
 	}
 
-	if (!strcmp(*argv, "genkey")) {
+	if (!strcmp(argv[0], "genkey")) {
 		return cmd_genkey(ctx);
+	} else if (!strcmp(argv[0], "gentx")) {
+		return cmd_gentx(ctx, argc - 1, argv + 1);
 	} else {
-		ELOG("%s: invalid subcommand\n", *argv);
+		ELOG("%s: invalid subcommand\n", argv[0]);
 		return 1;
 	}
 }
