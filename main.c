@@ -44,38 +44,41 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 	assert(0 && "unimplemented");
 }
 
-int run(secp256k1_context *ctx, int argc, char *argv[])
+int run(int argc, char *argv[])
 {
 	if (argc < 1) {
 		ELOG("give me subcommand\n");
 		return 1;
 	}
 
-	if (!strcmp(argv[0], "genkey")) {
-		return cmd_genkey(ctx);
-	} else if (!strcmp(argv[0], "gentx")) {
-		return cmd_gentx(ctx, argc - 1, argv + 1);
-	} else {
-		ELOG("%s: invalid subcommand\n", argv[0]);
-		return 1;
-	}
-}
-
-int main(int argc, char *argv[])
-{
 	int ret;
 	secp256k1_context *ctx;
-
-	cmd = argv[0];
 
 	if ((ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE)) == NULL) {
 		ELOG("failed to create secp256k1_context\n");
 		return 2;
 	}
 
-	ret = run(ctx, argc - 1, argv + 1);
+	if (!strcmp(argv[0], "genkey")) {
+		ret = cmd_genkey(ctx);
+	} else if (!strcmp(argv[0], "gentx")) {
+		ret = cmd_gentx(ctx, argc - 1, argv + 1);
+	} else {
+		ELOG("%s: invalid subcommand\n", argv[0]);
+		ret = 1;
+	}
 
 	secp256k1_context_destroy(ctx);
+
+	return ret;
+}
+
+int main(int argc, char *argv[])
+{
+	int ret;
+
+	cmd = argv[0];
+	ret = run(argc - 1, argv + 1);
 
 	return ret;
 }
