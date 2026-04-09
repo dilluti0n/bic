@@ -1,2 +1,4 @@
 *.o
 bic
+compile_commands.json
+.cache/
