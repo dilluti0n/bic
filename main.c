@@ -58,48 +58,6 @@ cleanup:
 	return ret;
 }
 
-static int
-read_key(const secp256k1_context *ctx, int fd, unsigned char key[SECKEY_LEN])
-{
-	ssize_t nread;
-	int ret;
-
-	if ((nread = read(fd, key, SECKEY_LEN)) != SECKEY_LEN) {
-		if (errno == EINTR) {
-			read_key(ctx, fd, key); /* TODO: use nread */
-		} else {
-			ret = -errno;
-			perror("read");
-			return ret;
-		}
-	}
-
-	if (!secp256k1_ec_seckey_verify(ctx, key)) {
-		ELOG("not a valid secret key");
-		return 1;
-	}
-
-	return 0;
-}
-
-static int
-fd_sign_ecdsa(const secp256k1_context *ctx, secp256k1_ecdsa_signature *sig,
-	      int fd, const unsigned char *msghash32)
-{
-	int ret;
-	unsigned char key[SECKEY_LEN];
-
-	if ((ret = read_key(ctx, fd, key)) != 0)
-		goto cleanup;
-
-	secp256k1_ecdsa_sign(ctx, sig, msghash32, key, NULL, NULL);
-	secp256k1_ecdsa_signature_normalize(ctx, sig, sig);
-
-cleanup:
-	explicit_bzero(key, SECKEY_LEN);
-	return ret;
-}
-
 struct input {
 	uint8_t txid[TXID_LEN];
 	uint32_t vout;
