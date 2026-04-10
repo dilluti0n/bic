@@ -198,22 +198,29 @@ static int parse_txid(const char *hex, uint8_t out[TXID_LEN])
 	return 0;
 }
 
-/*
- * Parse a decimal string into a uint32_t.
- * Rejects empty strings, non-digit trailing chars, negatives, and overflow.
- */
-static int parse_u32(const char *s, uint32_t *out)
+static int parse_u64(const char *s, uint64_t *out)
 {
-	if (s == NULL || *s == '\0')
+	if (s == NULL || *s == '\0' || s[0] == '-')
 		return -1;
 
 	errno = 0;
 	char *end;
-	unsigned long v = strtoul(s, &end, 10);
+	unsigned long long v = strtoull(s, &end, 10);
 
-	if (*end != '\0' || errno == ERANGE || v > UINT32_MAX || s[0] == '-')
+	if (*end != '\0')
+		return 1;
+	if (errno == ERANGE)
 		return 1;
 
+	*out = (uint64_t)v;
+	return 0;
+}
+
+static int parse_u32(const char *s, uint32_t *out)
+{
+	uint64_t v;
+	if (parse_u64(s, &v) < 0 || v > UINT32_MAX)
+		return 1;
 	*out = (uint32_t)v;
 	return 0;
 }
@@ -257,33 +264,47 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 
 			if ((txid_hex = strtok(optarg, ":")) == NULL ||
 			    (vout = strtok(NULL, ":")) == NULL ||
-			    (script_pubkey_hex = strtok(NULL, ":")) == NULL) {
+			    (script_pubkey_hex = strtok(NULL, ":")) == NULL ||
+			    parse_txid(txid_hex, inputs[ip].txid) != 0 ||
+			    parse_u32(vout, &inputs[ip].vout) != 0 ||
+			    (input_script_pubkeys[ip] = decode_hex_vector(script_pubkey_hex)) == NULL) {
 				ELOG("Invalid format: %s\n", optarg);
 				ret = 1;
 				goto cleanup;
 			}
 
-			if (parse_txid(txid_hex, inputs[ip].txid) != 0) {
-				ELOG("Invalid txid format: %s\n", txid_hex);
-				ret = 1;
-				goto cleanup;
-			}
-			if (parse_u32(vout, &inputs[ip].vout) != 0) {
-				ELOG("Invalid vout format: %s\n", vout);
-				ret = 1;
-				goto cleanup;
-			}
-			if ((input_script_pubkeys[ip] = decode_hex_vector(script_pubkey_hex)) == NULL) {
-				ELOG("Invalid script_pubkey format: %s\n", script_pubkey_hex);
+			ip++;
+			break;
+		case 'o':
+			char *amount;
+			char *pubkey_hash_hex;
+			uint8_t pkh[20];
+
+			if ((amount = strtok(optarg, ":")) == NULL ||
+			    (pubkey_hash_hex = strtok(NULL, ":")) == NULL ||
+			    parse_u64(amount, &outputs[op].amount) != 0 ||
+			    decode_hex(pubkey_hash_hex, pkh, sizeof(pkh)) != sizeof(pkh)) {
+				ELOG("Invalid format: %s\n", optarg);
 				ret = 1;
 				goto cleanup;
 			}
 
-			ip++;
-		case 'o':
-			assert(0 && "unimplemented");
+			/* build Legacy P2PKH scriptPubKey: 76 a9 14 <20-byte pkh> 88 ac */
+			outputs[op].script_pubkey[0] = 0x76;  /* OP_DUP */
+			outputs[op].script_pubkey[1] = 0xa9;  /* OP_HASH160 */
+			outputs[op].script_pubkey[2] = 0x14;  /* push 20 */
+			memcpy(&outputs[op].script_pubkey[3], pkh, 20);
+			outputs[op].script_pubkey[23] = 0x88; /* OP_EQUALVERIFY */
+			outputs[op].script_pubkey[24] = 0xac; /* OP_CHECKSIG */
+			outputs[op].script_pubkey_len = 25;
+
+			op++;
+			break;
 		}
 	}
+
+	assert(ip == input_cnt && op == output_cnt);
+	assert(0 && "unimplemented");
 
 	ret = 0;
 
