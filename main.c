@@ -12,6 +12,7 @@
 
 #define SECKEY_LEN 32
 #define TXID_LEN 32
+#define P2PKH_LEN 25
 
 const int ofd = 1;
 char *cmd = "bic";
@@ -110,7 +111,7 @@ struct input {
 struct output {
 	uint64_t amount;
 	uint64_t script_pubkey_len;
-	uint8_t *script_pubkey;
+	uint8_t script_pubkey[P2PKH_LEN];
 };
 
 struct tx {
@@ -301,7 +302,7 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 			memcpy(&outputs[op].script_pubkey[3], pkh, 20);
 			outputs[op].script_pubkey[23] = 0x88; /* OP_EQUALVERIFY */
 			outputs[op].script_pubkey[24] = 0xac; /* OP_CHECKSIG */
-			outputs[op].script_pubkey_len = 25;
+			outputs[op].script_pubkey_len = P2PKH_LEN;
 
 			op++;
 			break;
