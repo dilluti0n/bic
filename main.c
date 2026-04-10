@@ -251,10 +251,9 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 		return 1;
 	}
 
-	struct input inputs[input_cnt];
-
-	struct vector *input_script_pubkeys[input_cnt];
-	struct output outputs[output_cnt];
+	struct input inputs[input_cnt] = {};
+	struct vector *input_script_pubkeys[input_cnt] = {};
+	struct output outputs[output_cnt] = {};
 
 	int ip = 0;
 	int op = 0;
@@ -315,7 +314,7 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 	ret = 0;
 
 cleanup:
-	for (size_t i = 0; i < ip; i++)
+	for (int i = 0; i < ip; i++)
 		free(input_script_pubkeys[i]);
 
 	return ret;
