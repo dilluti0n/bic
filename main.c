@@ -229,13 +229,20 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 {
 	int input_cnt = 0;
 	int output_cnt = 0;
+	int opt;
 
-	for (int i = 1; i < argc; i++) {
-		if (argv[i][0] == '-') {
-			if (!strcmp(&argv[i][1], "i"))
-				input_cnt++;
-			else if (!strcmp(&argv[i][1], "o"))
-				output_cnt++;
+	optind = 0;
+	while ((opt = getopt(argc, argv, "i:o:")) != -1) {
+		switch (opt) {
+		case 'i':
+			input_cnt++;
+			break;
+		case 'o':
+			output_cnt++;
+			break;
+		case '?':
+		default:
+			return 1;
 		}
 	}
 
@@ -251,7 +258,6 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 
 	int ip = 0;
 	int op = 0;
-	int opt;
 	int ret;
 
 	optind = 0;
