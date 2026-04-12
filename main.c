@@ -190,7 +190,7 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 	int output_cnt = 0;
 	int opt;
 
-	optind = 0;
+	optind = 1;
 	while ((opt = getopt(argc, argv, "i:o:")) != -1) {
 		switch (opt) {
 		case 'i':
@@ -218,7 +218,7 @@ int cmd_gentx(secp256k1_context *ctx, int argc, char *argv[])
 	int op = 0;
 	int ret;
 
-	optind = 0;
+	optind = 1;
 	while ((opt = getopt(argc, argv, "i:o:")) != -1) {
 		switch (opt) {
 		case 'i':
@@ -282,7 +282,7 @@ cleanup:
 static int run(int argc, char *argv[])
 {
 	if (argc < 1) {
-		ELOG("give me subcommand\n");
+		ELOG("Give me subcommand\n");
 		return 1;
 	}
 
@@ -290,7 +290,7 @@ static int run(int argc, char *argv[])
 	secp256k1_context *ctx;
 
 	if ((ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE)) == NULL) {
-		ELOG("failed to create secp256k1_context\n");
+		ELOG("Failed to create secp256k1_context\n");
 		return 2;
 	}
 
@@ -299,7 +299,7 @@ static int run(int argc, char *argv[])
 	} else if (!strcmp(argv[0], "gentx")) {
 		ret = cmd_gentx(ctx, argc, argv);
 	} else {
-		ELOG("%s: invalid subcommand\n", argv[0]);
+		ELOG("%s: Invalid subcommand\n", argv[0]);
 		ret = 1;
 	}
 
